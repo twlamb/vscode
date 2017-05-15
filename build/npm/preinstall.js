@@ -6,12 +6,12 @@
 const path = require('path');
 const cp = require('child_process');
 
-if (process.env['npm_config_disturl'] !== 'https://atom.io/download/electron') {
+if (process.env['npm_config_disturl'] !== 'https://atom.io/download/atom-shell') {
 	console.error("You can't use plain npm to install Code's dependencies.");
 	console.error(
 		/^win/.test(process.platform)
-		? "Please run '.\\scripts\\npm.bat install' instead."
-		: "Please run './scripts/npm.sh install' instead."
+			? "Please run '.\\scripts\\npm.bat install' instead."
+			: "Please run './scripts/npm.sh install' instead."
 	);
 
 	process.exit(1);
