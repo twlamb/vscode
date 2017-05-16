@@ -11,5 +11,6 @@ export interface IFoldingController extends IEditorContribution {
 
 	foldAll();
 	unfoldAll();
+	foldAt(line: number);
 
 }

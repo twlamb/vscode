@@ -16,7 +16,9 @@ import { TPromise } from 'vs/base/common/winjs.base';
 import * as editorCommon from 'vs/editor/common/editorCommon';
 import { Range } from 'vs/editor/common/core/range';
 import { editorAction, ServicesAccessor, EditorAction, CommonEditorRegistry } from 'vs/editor/common/editorCommonExtensions';
+import { IEditorService } from 'vs/platform/editor/common/editor';
 import { ICodeEditor, IEditorMouseEvent, MouseTargetType } from 'vs/editor/browser/editorBrowser';
+import { ICodeEditorService, getCodeEditor } from 'vs/editor/common/services/codeEditorService';
 import { editorContribution } from 'vs/editor/browser/editorBrowserExtensions';
 import { CollapsibleRegion, getCollapsibleRegionsToFoldAtLine, getCollapsibleRegionsToUnfoldAtLine, doesLineBelongsToCollapsibleRegion, IFoldingRange } from 'vs/editor/contrib/folding/common/foldingModel';
 import { computeRanges, limitByIndent } from 'vs/editor/contrib/folding/common/indentFoldStrategy';
@@ -465,6 +467,21 @@ export class FoldingController implements IFoldingController {
 		this.changeAll(false);
 	}
 
+	public foldAt(line: number): void {
+		let hasChanges = true;
+		this.editor.changeDecorations(changeAccessor => {
+			this.decorations.forEach(d => {
+				if (d.startLineNumber === line && !d.isCollapsed) {
+					d.setCollapsed(true, changeAccessor);
+					hasChanges = true;
+				}
+			});
+		});
+		if (hasChanges) {
+			this.updateHiddenAreas(this.editor.getPosition().lineNumber);
+		}
+	}
+
 	private changeAll(collapse: boolean): void {
 		if (this.decorations.length > 0) {
 			let hasChanges = true;
@@ -545,6 +562,37 @@ function foldingArgumentsConstraint(args) {
 		}
 	}
 	return true;
+}
+
+CommonEditorRegistry.registerLanguageCommand('_executeFoldAtLine', function (accessor, args: { line: number; }) {
+	let line = args.line;
+	if (typeof line !== 'number') {
+		// throw illegalArgument();
+	}
+
+
+	let editor = accessor.get(ICodeEditorService).getFocusedCodeEditor();
+	if (!editor) {
+		editor = getActiveEditorWidget(accessor);
+	}
+	if (!editor) {
+		// well, at least we tried...
+		return;
+	}
+
+	let foldingController = FoldingController.get(editor);
+	if (!foldingController) {
+		return;
+	}
+
+	// this.reportTelemetry(accessor, editor);
+	foldingController.foldAt(line);
+});
+
+function getActiveEditorWidget(accessor: ServicesAccessor): editorCommon.ICommonCodeEditor {
+	const editorService = accessor.get(IEditorService);
+	let activeEditor = (<any>editorService).getActiveEditor && (<any>editorService).getActiveEditor();
+	return getCodeEditor(activeEditor);
 }
 
 @editorAction

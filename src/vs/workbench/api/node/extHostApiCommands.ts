@@ -240,6 +240,15 @@ export class ExtHostApiCommands {
 					{ name: 'column', description: '(optional) Column in which to open', constraint: v => v === void 0 || typeof v === 'number' }
 				]
 			});
+
+		this._register('vscode.foldAtLine', (line: number) => {
+			return this._commands.executeCommand('_executeFoldAtLine', { line: line });
+		}, {
+				description: 'Folders the focused or active editor at the given line',
+				args: [
+					{ name: 'line', description: 'The line to attempt to fold', constraint: v => typeof v === 'number' }
+				]
+			});
 	}
 
 	// --- command impl
